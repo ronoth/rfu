@@ -38,8 +38,8 @@
 #include	<stdint.h>	// For C99 fixed sized types
 #include	<stdbool.h>	// For C99 _Bool
 
-#include	"silabs_defs.h"
-#include	"silabs_sal.h"
+#include    "silabs_defs.h"
+#include    "silabs_sal.h"
 
 #ifdef _WIN32
 // The following ifdef block is the standard way of creating macros which make exporting 

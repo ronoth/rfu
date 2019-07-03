@@ -1,10 +1,10 @@
 #include <algorithm>
 #include <iostream>
 #include <bitset>
-#include "Types.h"
-#include "CP210xRuntimeDLL.h"
+#include "include/Types.h"
+#include "lib/CP210xRuntimeDLL.h"
 
-#include "cxxopts.hpp"
+#include "include/cxxopts.hpp"
 
 void help() {
 
