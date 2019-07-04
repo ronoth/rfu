@@ -1,14 +1,11 @@
 #include <algorithm>
 #include <iostream>
 #include <bitset>
+#include <iomanip>
 #include "include/Types.h"
 #include "lib/CP210xRuntimeDLL.h"
 
 #include "include/cxxopts.hpp"
-
-void help() {
-
-}
 
 int main(int argc, char** argv) {
 
@@ -32,36 +29,47 @@ int main(int argc, char** argv) {
             exit(1);
         }
 
-        LPCSTR device = opts["device"].as<std::string>().c_str();
-
-        auto hMasterCOM = CreateFile(device, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
+        auto device = opts["device"].as<std::string>().c_str();
 
 
-        CP210xRT_WriteLatch(hMasterCOM, 0xffff, 0);
+        // Check to see if the device passed is a valid com port
+        TCHAR lpTargetPath[255];
+        if(QueryDosDevice(device, lpTargetPath, 255) == 0) {
+            std::cout << "INVALID Serial Device: " << device << std::endl;
+            exit(1);
+        }
+
+        char devbuf[strlen(device)+5];
+        sprintf(devbuf, "\\\\.\\%s", device);
+        auto hMasterCOM = CreateFile(devbuf, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
+
+
+
+        auto ret = CP210xRT_WriteLatch(hMasterCOM, 0xffff, 0);
         Sleep(100);
-        auto ret = CP210xRT_WriteLatch(hMasterCOM, 0x00ff, 1);
-        if(ret != CP210x_SUCCESS) {
+
+        uint16_t latchval = CP210x_GPIO_1;
+        CP210xRT_WriteLatch(hMasterCOM, latchval, latchval);
+        if (ret != CP210x_SUCCESS) {
             std::cout << "ERROR Writing LATCH: " << ret << std::endl;
         }
         Sleep(100);
 
-
-        WORD value;
-        ret = CP210xRT_ReadLatch( hMasterCOM, &value);
-        if(ret != CP210x_SUCCESS) {
+        ret = CP210xRT_ReadLatch(hMasterCOM, &latchval);
+        if (ret != CP210x_SUCCESS) {
             std::cout << "ERROR READING LATCH: " << ret << std::endl;
         }
 
-        std::bitset<7> binary(value);
+        std::bitset<8> binary(latchval);
         auto bstr = binary.to_string();
         std::reverse(bstr.begin(), bstr.end());
-        std::cout <<  bstr << std::endl;
+        std::cout << bstr << std::endl;
 
 
         std::cout << "PRODUCT: ";
         CP210x_PRODUCT_STRING product[CP210x_MAX_PRODUCT_STRLEN];
         BYTE len = 0;
-        ret = CP210xRT_GetDeviceProductString(hMasterCOM, &product, &len, TRUE);
+        CP210xRT_GetDeviceProductString(hMasterCOM, &product, &len, TRUE);
         if(ret != CP210x_SUCCESS) {
             std::cout << "ERROR READING Product String: " << ret << std::endl;
         }
