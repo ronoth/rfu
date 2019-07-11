@@ -1,11 +1,32 @@
+/*
+  Copyright (C) 2019 Steven Osborn <steven@lolsborn.com>
+
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
 #include <algorithm>
 #include <iostream>
 #include <bitset>
 #include <iomanip>
-#include "include/Types.h"
-#include "lib/CP210xRuntimeDLL.h"
+#include "Types.h"
+#include "CP210xRuntimeDLL.h"
 
-#include "include/cxxopts.hpp"
+#include "cxxopts.hpp"
+#include "serial-gpio.h"
+#include "stm32flash-lib.h"
+#include "port.h"
+#include "stm32.h"
 
 int main(int argc, char** argv) {
 
@@ -29,61 +50,44 @@ int main(int argc, char** argv) {
             exit(1);
         }
 
-        auto device = opts["device"].as<std::string>().c_str();
+        auto device = opts["device"].as<std::string>();
+        stm32_t *stmout;
+        struct port_options port_opts;
+        struct port_interface *port = NULL;
 
+        port_opts.device = device.c_str();
+        port_opts.baudRate = SERIAL_BAUD_57600;
+        port_opts.serial_mode = "8e1";
+        port_opts.bus_addr = 0;
+        port_opts.rx_frame_max = STM32_MAX_RX_FRAME;
+        port_opts.tx_frame_max = STM32_MAX_TX_FRAME;
 
-        // Check to see if the device passed is a valid com port
-        TCHAR lpTargetPath[255];
-        if(QueryDosDevice(device, lpTargetPath, 255) == 0) {
-            std::cout << "INVALID Serial Device: " << device << std::endl;
-            exit(1);
+        if (port_open(&port_opts, &port) != PORT_ERR_OK) {
+            fprintf(stderr, "Failed to open port: %s\n", port_opts.device);
+            return PORT_INIT_FAILED;
         }
 
-        char devbuf[strlen(device)+5];
-        sprintf(devbuf, "\\\\.\\%s", device);
-        auto hMasterCOM = CreateFile(devbuf, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
+        struct serial {
+            HANDLE fd;
+            DCB oldtio;
+            DCB newtio;
+            char setup_str[11];
+        };
+
+        serial *h = (serial *)port->_private;
+        printDevInfo(&h->fd);
+        toggleBootStart(&h->fd);
 
 
 
-        auto ret = CP210xRT_WriteLatch(hMasterCOM, 0xffff, 0);
-        Sleep(100);
-
-        uint16_t latchval = CP210x_GPIO_1;
-        CP210xRT_WriteLatch(hMasterCOM, latchval, latchval);
-        if (ret != CP210x_SUCCESS) {
-            std::cout << "ERROR Writing LATCH: " << ret << std::endl;
+        char init_flag = 1;
+        stmout = stm32_init(port, init_flag);
+        if (!stmout) {
+            printf("Unable to init STM32\n");
+            return STM_INIT_FAILED;
         }
-        Sleep(100);
 
-        ret = CP210xRT_ReadLatch(hMasterCOM, &latchval);
-        if (ret != CP210x_SUCCESS) {
-            std::cout << "ERROR READING LATCH: " << ret << std::endl;
-        }
-
-        std::bitset<8> binary(latchval);
-        auto bstr = binary.to_string();
-        std::reverse(bstr.begin(), bstr.end());
-        std::cout << bstr << std::endl;
-
-
-        std::cout << "PRODUCT: ";
-        CP210x_PRODUCT_STRING product[CP210x_MAX_PRODUCT_STRLEN];
-        BYTE len = 0;
-        CP210xRT_GetDeviceProductString(hMasterCOM, &product, &len, TRUE);
-        if(ret != CP210x_SUCCESS) {
-            std::cout << "ERROR READING Product String: " << ret << std::endl;
-        }
-        fwrite(product, sizeof(char), len, stdout);
-        std::cout << std::endl;
-
-        std::cout << "SERIAL: ";
-        CP210x_SERIAL_STRING serial[CP210x_MAX_SERIAL_STRLEN];
-        ret = CP210xRT_GetDeviceSerialNumber(hMasterCOM, &serial, &len, TRUE);
-        if(ret != CP210x_SUCCESS) {
-            std::cout << "ERROR READING Product String: " << ret << std::endl;
-        }
-        fwrite(serial, sizeof(char), len, stdout);
-        std::cout << std::endl;
+        stm32_write_memory()
 
     } catch(cxxopts::OptionException& exception) {
         std::cout << exception.what() << std::endl;

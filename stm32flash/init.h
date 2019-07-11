@@ -1,5 +1,7 @@
 /*
-  Copyright (C) 2019 Steven Osborn <steven@lolsborn.com>
+  stm32flash - Open Source ST STM32 flash program for *nix
+  Copyright (C) 2010 Geoffrey McRae <geoff@spacevs.com>
+  Copyright (C) 2013 Antonio Borneo <borneo.antonio@gmail.com>
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
@@ -16,22 +18,24 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef DFU_SERIAL_GPIO_H
-#define DFU_SERIAL_GPIO_H
 
+#ifndef _INIT_H
+#define _INIT_H
 
-#include "Types.h"
-#include "CP210xRuntimeDLL.h"
+#include "stm32.h"
+#include "port.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-int setGPIO(HANDLE *device, uint16_t gpio, BOOL level);
+int init_bl_entry(struct port_interface *port, const char *seq);
 
+int init_bl_exit(stm32_t *stm, struct port_interface *port, const char *seq);
 
+#ifdef __cplusplus
+}
+#endif
 
-void printDevInfo(HANDLE *device);
-void toggleBootStart(HANDLE *device);
-void toggleBootFinish(HANDLE *device);
-
-
-
-#endif //DFU_SERIAL_GPIO_H
+#endif

@@ -41,6 +41,9 @@ typedef unsigned char BYTE;
 #define UNREFERENCED_PARAMETER(p) (void)(p)
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wenum-compare"
+
 #if defined(DEFINE_GUID)
 DEFINE_GUID(GUID_DEVINTERFACE_SILABS_CP210x,
 	0xa2a39220, 0x39f4, 0x4b88, 0xae, 0xcb, 0x3d, 0x86, 0xa3, 0x5d, 0xc7, 0x48);
@@ -234,5 +237,5 @@ _Success_(return == TRUE)
 __inline static bool IsSuccessSILABS_STATUS(_In_ const SILABS_STATUS _s) { return SILABS_STATUS_SUCCESS == _s; }
 
 /// @}
-
+#pragma GCC diagnostic pop
 #endif // !defined(HOST_COMMON_INCLUDE_SILABS_DEFS_H_INCLUDED_BVHHTNCO7E)
