@@ -4,11 +4,11 @@
 
 #include <cstdint>
 #include <iostream>
+#include <stm32.h>
+#include "port.h"
 #include "Types.h"
 #include "CP210xRuntimeDLL.h"
 
-const static uint16_t NRST = CP210x_GPIO_2;
-const static uint16_t BOOT0 = CP210x_GPIO_3;
 
 void printDevInfo(HANDLE *device) {
     std::cout << "PRODUCT: ";
@@ -29,6 +29,31 @@ void printDevInfo(HANDLE *device) {
     }
     fwrite(serial, sizeof(char), len, stdout);
     std::cout << std::endl;
+}
+
+void eraseFlash(stm32_t *stm) {
+    printf("Erasing Flash\n");
+    stm32_readprot_memory(stm);
+    Sleep(100);
+    stm = stm32_init(stm->port, 1);
+    stm32_runprot_memory(stm);
+    Sleep(100);
+}
+
+void printMore(stm32_t *stm, port_interface *port) {
+    printf("Interface %s: %s\n", port->name, port->get_cfg_str(port));
+
+    printf("Version      : 0x%02x\n", stm->bl_version);
+    if (port->flags & PORT_GVR_ETX) {
+        printf("Option 1     : 0x%02x\n", stm->option1);
+        printf("Option 2     : 0x%02x\n", stm->option2);
+    }
+    printf("Device ID    : 0x%04x (%s)\n", stm->pid, stm->dev->name);
+    printf("- RAM        : %dKiB  (%db reserved by bootloader)\n", (stm->dev->ram_end - 0x20000000) / 1024, stm->dev->ram_start - 0x20000000);
+    printf("- Flash      : %dKiB (size first sector: %dx%d)\n", (stm->dev->fl_end - stm->dev->fl_start ) / 1024, stm->dev->fl_pps, stm->dev->fl_ps[0]);
+    printf("- Option RAM : %db\n", stm->dev->opt_end - stm->dev->opt_start + 1);
+    printf("- System RAM : %dKiB\n", (stm->dev->mem_end - stm->dev->mem_start) / 1024);
+
 }
 
 void toggleBootFinish(HANDLE *device) {

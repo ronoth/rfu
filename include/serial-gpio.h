@@ -20,6 +20,7 @@
 #define DFU_SERIAL_GPIO_H
 
 
+#include <stm32.h>
 #include "Types.h"
 #include "CP210xRuntimeDLL.h"
 
@@ -27,7 +28,8 @@
 int setGPIO(HANDLE *device, uint16_t gpio, BOOL level);
 
 
-
+void eraseFlash(stm32_t *stm);
+void printMore(stm32_t *stm, port_interface *port);
 void printDevInfo(HANDLE *device);
 void toggleBootStart(HANDLE *device);
 void toggleBootFinish(HANDLE *device);
