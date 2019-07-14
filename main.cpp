@@ -103,8 +103,9 @@ int main(int argc, char** argv) {
         printMore(stmout, port);
         eraseFlash(stmout);
 
-        uint32_t	addr, start, end;
         off_t offset = 0;
+        uint32_t addr = 0x08000000;
+        uint32_t end = 0x08030000;
         unsigned int size;
         unsigned int	len;
         unsigned int max_wlen, max_rlen;
@@ -112,19 +113,24 @@ int main(int argc, char** argv) {
         parser_t	*parser		= NULL;
         /* now try binary */
         parser = &PARSER_BINARY;
-        void		*p_st		= NULL;
+        void		*p_st		= NULL; // pointer to "storage"d
         stm32_err_t s_err;
         const char* filename = file.c_str();
 
         p_st = parser->init();
 
+
         if (!p_st) {
             fprintf(stderr, "%s Parser failed to initialize\n", parser->name);
             goto close;
         }
+        if (parser->open(p_st, filename, 0) != PARSER_ERR_OK) {
+            fprintf(stderr, "%s parser failed to open file %s\n", parser->name, filename);
+        }
+
         printf("Writing file %s\n", filename);
-        addr = start;
         while(addr < end && offset < size) {
+
             uint32_t left	= end - addr;
             len		= max_wlen > left ? left : max_wlen;
             len		= len > size - offset ? size - offset : len;
@@ -152,11 +158,7 @@ int main(int argc, char** argv) {
 
             offset	+= len;
 
-            fprintf(stdout,
-                    "\rWrote %saddress 0x%08x (%.2f%%) ",
-                    addr,
-                    (100.0f / size) * offset
-            );
+            printf("\rWrote %saddress 0x%08x (%.2f%%) ", addr, (100.0f / size) * offset);
             fflush(stdout);
 
         }
