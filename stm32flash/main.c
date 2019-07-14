@@ -429,29 +429,6 @@ int main(int argc, char* argv[]) {
 		max_rlen = port_opts.rx_frame_max;
 		max_rlen = max_rlen < max_wlen ? max_rlen : max_wlen;
 
-		/* Assume data from stdin is whole device */
-		if (filename[0] == '-' && filename[1] == '\0')
-			size = end - start;
-		else
-			size = parser->size(p_st);
-
-		// TODO: It is possible to write to non-page boundaries, by reading out flash
-		//       from partial pages and combining with the input data
-		// if ((start % stm->dev->fl_ps[i]) != 0 || (end % stm->dev->fl_ps[i]) != 0) {
-		//	fprintf(stderr, "Specified start & length are invalid (must be page aligned)\n");
-		//	goto close;
-		// } 
-
-		// TODO: If writes are not page aligned, we should probably read out existing flash
-		//       contents first, so it can be preserved and combined with new data
-		if (!no_erase && num_pages) {
-			fprintf(diag, "Erasing memory\n");
-			s_err = stm32_erase_memory(stm, first_page, num_pages);
-			if (s_err != STM32_ERR_OK) {
-				fprintf(stderr, "Failed to erase memory\n");
-				goto close;
-			}
-		}
 
 		fflush(diag);
 		addr = start;

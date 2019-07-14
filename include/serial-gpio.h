@@ -24,11 +24,9 @@
 #include "Types.h"
 #include "CP210xRuntimeDLL.h"
 
-
-int setGPIO(HANDLE *device, uint16_t gpio, BOOL level);
-
-
+void jumpToStart(stm32_t *stm);
 void eraseFlash(stm32_t *stm);
+void writeFlash(stm32_t *stm, port_interface *port, std::string file);
 void printMore(stm32_t *stm, port_interface *port);
 void printDevInfo(HANDLE *device);
 void toggleBootStart(HANDLE *device);

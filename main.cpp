@@ -102,73 +102,13 @@ int main(int argc, char** argv) {
 
         printMore(stmout, port);
         eraseFlash(stmout);
+        writeFlash(stmout, port, file);
+        toggleBootFinish(&h->fd);
+        jumpToStart(stmout);
 
-        off_t offset = 0;
-        uint32_t addr = 0x08000000;
-        uint32_t end = 0x08030000;
-        unsigned int size;
-        unsigned int	len;
-        unsigned int max_wlen, max_rlen;
-        uint8_t		buffer[256];
-        parser_t	*parser		= NULL;
-        /* now try binary */
-        parser = &PARSER_BINARY;
-        void		*p_st		= NULL; // pointer to "storage"d
-        stm32_err_t s_err;
-        const char* filename = file.c_str();
-
-        p_st = parser->init();
-
-
-        if (!p_st) {
-            fprintf(stderr, "%s Parser failed to initialize\n", parser->name);
-            goto close;
-        }
-        if (parser->open(p_st, filename, 0) != PARSER_ERR_OK) {
-            fprintf(stderr, "%s parser failed to open file %s\n", parser->name, filename);
-        }
-
-        printf("Writing file %s\n", filename);
-        while(addr < end && offset < size) {
-
-            uint32_t left	= end - addr;
-            len		= max_wlen > left ? left : max_wlen;
-            len		= len > size - offset ? size - offset : len;
-
-            if (parser->read(p_st, buffer, &len) != PARSER_ERR_OK) {
-                fprintf(stderr, "Parser Error\n");
-                goto close;
-            }
-
-            if (len == 0) {
-                if (filename[0] == '-') {
-                    break;
-                } else {
-                    fprintf(stderr, "Failed to read input file\n");
-                    goto close;
-                }
-            }
-
-            again:
-            s_err = stm32_write_memory(stmout, addr, buffer, len);
-            if (s_err != STM32_ERR_OK) {
-                fprintf(stderr, "Failed to write memory at address 0x%08x\n", addr);
-                goto close;
-            }
-
-            offset	+= len;
-
-            printf("\rWrote %saddress 0x%08x (%.2f%%) ", addr, (100.0f / size) * offset);
-            fflush(stdout);
-
-        }
-
-        close:
-            if (p_st) parser->close(p_st);
-            if (stmout) stm32_close(stmout);
-            if (port)
-                port->close(port);
-
+        if (stmout) stm32_close(stmout);
+        if (port)
+            port->close(port);
 
     } catch(cxxopts::OptionException& exception) {
         std::cout << exception.what() << std::endl;

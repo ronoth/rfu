@@ -37,7 +37,7 @@ int initPort(const char* device, stm32_t* stmout) {
        return PORT_INIT_FAILED;
     }
     char init_flag = 1;
-    stmout = stm32_init(&port, init_flag);
+    stmout = stm32_init(port, init_flag);
     if (!stmout) {
         printf("Unable to init STM32\n");
         return STM_INIT_FAILED;
