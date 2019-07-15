@@ -11,7 +11,7 @@ args = parser.parse_args()
 PID = 0xea60
 VID = 0x10c4
 
-dev = usb.core.find(idVendor=VID, idProduct=PID, bus=3, address=28)
+dev = usb.core.find(idVendor=VID, idProduct=PID)
 if not dev:
         print("CP2102N was not found :(")
         exit(1)

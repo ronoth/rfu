@@ -20,6 +20,8 @@
 #include <bitset>
 #include <iomanip>
 #include <sys/types.h>
+#include <termios.h>
+
 #include "Types.h"
 #include "CP210xRuntimeDLL.h"
 
@@ -80,16 +82,10 @@ int main(int argc, char** argv) {
             return PORT_INIT_FAILED;
         }
 
-        struct serial {
-            HANDLE fd;
-            DCB oldtio;
-            DCB newtio;
-            char setup_str[11];
-        };
 
         serial *h = (serial *)port->_private;
-        printDevInfo(&h->fd);
-        toggleBootStart(&h->fd);
+        printDevInfo(h);
+        toggleBootStart(h);
 
 
         char init_flag = 1;
@@ -103,7 +99,7 @@ int main(int argc, char** argv) {
         printMore(stmout, port);
         eraseFlash(stmout);
         writeFlash(stmout, port, file);
-        toggleBootFinish(&h->fd);
+        toggleBootFinish(h);
         jumpToStart(stmout);
 
         if (stmout) stm32_close(stmout);

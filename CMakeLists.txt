@@ -10,7 +10,7 @@ include_directories(include/ stm32flash/)
 find_package(Qt5Widgets REQUIRED)
 
 add_executable(dfu
-        src/serial-gpio.cpp
+        src/serial-gpio-platform.cpp
         src/stm32flash-lib.c
         stm32flash/stm32.c
         stm32flash/port.c
@@ -18,11 +18,11 @@ add_executable(dfu
         stm32flash/utils.c
         stm32flash/dev_table.c
         stm32flash/serial_common.c
-        stm32flash/serial_w32.c
+        stm32flash/serial_platform.c
         stm32flash/parsers/hex.c
         stm32flash/parsers/binary.c
         main.cpp
-        )
+        include/sleepms.h)
 
 configure_file(lib/CP210xRuntime.dll
         ${CMAKE_CURRENT_BINARY_DIR}/CP210xRuntime.dll COPYONLY)

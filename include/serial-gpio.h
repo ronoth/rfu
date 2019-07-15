@@ -21,16 +21,36 @@
 
 
 #include <stm32.h>
-#include "Types.h"
+
+#ifdef WIN32
 #include "CP210xRuntimeDLL.h"
+#include "Types.h"
+
+struct serial {
+            HANDLE fd;
+            DCB oldtio;
+            DCB newtio;
+            char setup_str[11];
+        };
+#else
+
+#include <termios.h>
+
+struct serial {
+    int fd;
+    struct termios oldtio;
+    struct termios newtio;
+    char setup_str[11];
+};
+#endif
 
 void jumpToStart(stm32_t *stm);
 void eraseFlash(stm32_t *stm);
 void writeFlash(stm32_t *stm, port_interface *port, std::string file);
 void printMore(stm32_t *stm, port_interface *port);
-void printDevInfo(HANDLE *device);
-void toggleBootStart(HANDLE *device);
-void toggleBootFinish(HANDLE *device);
+void printDevInfo(serial *device);
+void toggleBootStart(serial *device);
+void toggleBootFinish(serial *device);
 
 
 

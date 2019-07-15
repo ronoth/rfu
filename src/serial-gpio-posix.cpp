@@ -8,43 +8,28 @@
 #include <sys/types.h>
 #include <parsers/parser.h>
 #include <parsers/binary.h>
+#include <sleepms.h>
+#include <serial-gpio.h>
+#include <sys/ioctl.h>
 #include "port.h"
 #include "Types.h"
 #include "CP210xRuntimeDLL.h"
 
 
-void printDevInfo(HANDLE *device) {
-    std::cout << "Product: ";
-    CP210x_PRODUCT_STRING product[CP210x_MAX_PRODUCT_STRLEN];
-    BYTE len = 0;
-    auto ret = CP210xRT_GetDeviceProductString(*device, &product, &len, TRUE);
-    if (ret != CP210x_SUCCESS) {
-        std::cout << "ERROR READING Product String: " << ret << std::endl;
-    }
-    fwrite(product, sizeof(char), len, stdout);
-    std::cout << std::endl;
-
-    std::cout << "Device Serial: ";
-    CP210x_SERIAL_STRING serial[CP210x_MAX_SERIAL_STRLEN];
-    ret = CP210xRT_GetDeviceSerialNumber(*device, &serial, &len, TRUE);
-    if (ret != CP210x_SUCCESS) {
-        std::cout << "ERROR READING Product String: " << ret << std::endl;
-    }
-    fwrite(serial, sizeof(char), len, stdout);
-    std::cout << std::endl;
+void printDevInfo(serial* device) {
 }
 
 void eraseFlash(stm32_t *stm) {
     printf("Erasing Flash\n");
     stm32_readprot_memory(stm);
-    Sleep(100);
+    sleep_ms(100);
     stm = stm32_init(stm->port, 1);
     stm32_runprot_memory(stm);
-    Sleep(100);
+    sleep_ms(100);
 }
 
 void jumpToStart(stm32_t *stm) {
-    Sleep(100);
+    sleep_ms(100);
     uint32_t execute = stm->dev->fl_start;
     printf("\nStarting execution at address 0x%08x... ", execute);
     if (stm32_go(stm, execute) == STM32_ERR_OK)
@@ -62,7 +47,7 @@ void writeFlash(stm32_t *stm, port_interface *port, std::string file) {
     uint32_t end =  0x08030000;
     unsigned int size;
     unsigned int	len;
-    boolean verify = 0;
+    bool verify = 0;
     unsigned int max_wlen, max_rlen;
     uint8_t		buffer[256];
     /* now try binary */
@@ -150,30 +135,38 @@ void printMore(stm32_t *stm, port_interface *port) {
 
 }
 
-void toggleBootFinish(HANDLE *device) {
+void toggleBootFinish(serial *device) {
     // Make BOOT0 Low, releasing bootloader mode
-    CP210xRT_WriteLatch(*device, BOOT0, 0);
-    Sleep(100);
+    //CP210xRT_WriteLatch(*device, BOOT0, 0);
+    sleep_ms(100);
 }
 
 
-void toggleBootStart(HANDLE *device) {
+void toggleBootStart(serial *device) {
 
     // Make all pins low, enabling reset
-    auto ret = CP210xRT_WriteLatch(*device, 0xffff, 0);
-    Sleep(100);
+
+    int bit, lines;
+
+
+    // Make all pins low, enabling reset
+    lines = 0x00ff;
+    if (ioctl(device->fd, TIOCMSET, &lines)) {
+        fprintf(stderr, "Error toggling boot pin clear\n");
+    }
+    sleep_ms(100);
 
     // Pull BOOT0 high, signaling bootloader
-    ret = CP210xRT_WriteLatch(*device, BOOT0, BOOT0);
-    if (ret != CP210x_SUCCESS) {
-        std::cout << "ERROR Writing LATCH: " << ret << std::endl;
+    lines = (0xff << 8) + BOOT0;
+    if (ioctl(device->fd, TIOCMSET, &lines)) {
+        fprintf(stderr, "Error toggling boot pin BOOT0\n");
     }
-    Sleep(100);
+    sleep_ms(100);
 
     // Release reset starting device in bootloader mode
-    ret = CP210xRT_WriteLatch(*device, NRST, NRST);
-    if (ret != CP210x_SUCCESS) {
-        std::cout << "ERROR Writing LATCH: " << ret << std::endl;
+    lines = (0xff << 8) + NRST;
+    if (ioctl(device->fd, TIOCMSET, &lines)) {
+        fprintf(stderr, "Error toggling boot NRST\n");
     }
-    Sleep(100);
+    sleep_ms(100);
 }

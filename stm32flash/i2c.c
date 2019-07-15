@@ -54,6 +54,7 @@ struct port_interface port_i2c = {
 #else
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
+#include  <errno.h>
 #endif
 
 #include <sys/ioctl.h>
@@ -121,7 +122,7 @@ static port_err_t i2c_open(struct port_interface *port,
 
 	h->fd = fd;
 	h->addr = addr;
-	port->private = h;
+	port->_private = h;
 	return PORT_ERR_OK;
 }
 
@@ -129,12 +130,12 @@ static port_err_t i2c_close(struct port_interface *port)
 {
 	struct i2c_priv *h;
 
-	h = (struct i2c_priv *)port->private;
+	h = (struct i2c_priv *)port->_private;
 	if (h == NULL)
 		return PORT_ERR_UNKNOWN;
 	close(h->fd);
 	free(h);
-	port->private = NULL;
+	port->_private = NULL;
 	return PORT_ERR_OK;
 }
 
@@ -144,7 +145,7 @@ static port_err_t i2c_read(struct port_interface *port, void *buf,
 	struct i2c_priv *h;
 	int ret;
 
-	h = (struct i2c_priv *)port->private;
+	h = (struct i2c_priv *)port->_private;
 	if (h == NULL)
 		return PORT_ERR_UNKNOWN;
 	ret = read(h->fd, buf, nbyte);
@@ -159,7 +160,7 @@ static port_err_t i2c_write(struct port_interface *port, void *buf,
 	struct i2c_priv *h;
 	int ret;
 
-	h = (struct i2c_priv *)port->private;
+	h = (struct i2c_priv *)port->_private;
 	if (h == NULL)
 		return PORT_ERR_UNKNOWN;
 	ret = write(h->fd, buf, nbyte);
@@ -179,7 +180,7 @@ static const char *i2c_get_cfg_str(struct port_interface *port)
 	struct i2c_priv *h;
 	static char str[11];
 
-	h = (struct i2c_priv *)port->private;
+	h = (struct i2c_priv *)port->_private;
 	if (h == NULL)
 		return "INVALID";
 	snprintf(str, sizeof(str), "addr 0x%2x", h->addr);
