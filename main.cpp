@@ -20,10 +20,14 @@
 #include <bitset>
 #include <iomanip>
 #include <sys/types.h>
-#include <termios.h>
 
+
+#if defined(__WIN32__) || defined(__CYGWIN__)
 #include "Types.h"
 #include "CP210xRuntimeDLL.h"
+#else
+#include <termios.h>
+#endif
 
 #include "cxxopts.hpp"
 #include "serial-gpio.h"
@@ -31,7 +35,6 @@
 #include "port.h"
 #include "stm32.h"
 #include "parsers/parser.h"
-
 #include "parsers/binary.h"
 #include "parsers/hex.h"
 
@@ -60,7 +63,7 @@ int main(int argc, char** argv) {
 
         auto device = opts["device"].as<std::string>();
 
-        std::string file = "";
+        std::string file;
         if(opts.count("file") == 1) {
             file = opts["file"].as<std::string>();
         }
@@ -98,7 +101,7 @@ int main(int argc, char** argv) {
 
         printMore(stmout, port);
         eraseFlash(stmout);
-        writeFlash(stmout, port, file);
+        writeFlash(stmout, file);
         toggleBootFinish(h);
         jumpToStart(stmout);
 

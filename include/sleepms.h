@@ -5,7 +5,7 @@
 #ifndef DFU_SLEEPMS_H
 #define DFU_SLEEPMS_H
 
-#ifdef WIN32
+#if defined(__WIN32__) || defined(__CYGWIN__)
 #include <windows.h>
 #elif _POSIX_C_SOURCE >= 199309L
 #include <time.h>   // for nanosleep
@@ -15,7 +15,7 @@
 
 void sleep_ms(int milliseconds) // cross-platform sleep function
 {
-#ifdef WIN32
+#if defined(__WIN32__) || defined(__CYGWIN__)
     Sleep(milliseconds);
 #elif _POSIX_C_SOURCE >= 199309L
     struct timespec ts;

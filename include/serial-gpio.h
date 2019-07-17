@@ -46,7 +46,7 @@ struct serial {
 
 void jumpToStart(stm32_t *stm);
 void eraseFlash(stm32_t *stm);
-void writeFlash(stm32_t *stm, port_interface *port, std::string file);
+void writeFlash(stm32_t *stm, std::string file);
 void printMore(stm32_t *stm, port_interface *port);
 void printDevInfo(serial *device);
 void toggleBootStart(serial *device);
