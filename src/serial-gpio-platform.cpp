@@ -47,7 +47,7 @@ void writeFlash(stm32_t *stm, std::string file) {
     max_wlen = STM32_MAX_TX_FRAME - 2;	/* skip len and crc */
     max_wlen &= ~3;	/* 32 bit aligned */
 
-    max_rlen = STM32_MAX_RX_FRAME;
+//    max_rlen = STM32_MAX_RX_FRAME;
     //max_rlen = max_rlen < max_wlen ? max_rlen : max_wlen;
 
     p_st = parser->init();
