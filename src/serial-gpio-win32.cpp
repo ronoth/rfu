@@ -1,16 +1,23 @@
-//
-// Created by steven on 7/4/2019.
-//
+/*
+  Copyright (C) 2019 Ronoth, LLC <steven@ronoth.com>
 
-#include <cstdint>
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
 #include <iostream>
-#include <stm32.h>
-#include <sys/types.h>
-#include <parsers/parser.h>
-#include <parsers/binary.h>
 #include <sleepms.h>
 #include <serial-gpio.h>
-#include "port.h"
 
 #if defined(__WIN32__) || defined(__CYGWIN__)
 #include "Types.h"
@@ -37,25 +44,6 @@ void printDevInfo(serial *device) {
     }
     fwrite(serial, sizeof(char), len, stdout);
     std::cout << std::endl;
-}
-
-void eraseFlash(stm32_t *stm) {
-    printf("Erasing Flash\n");
-    stm32_readprot_memory(stm);
-    sleep_ms(100);
-    stm = stm32_init(stm->port, 1);
-    stm32_runprot_memory(stm);
-    sleep_ms(100);
-}
-
-void jumpToStart(stm32_t *stm) {
-    sleep_ms(100);
-    uint32_t execute = stm->dev->fl_start;
-    printf("\nStarting execution at address 0x%08x... ", execute);
-    if (stm32_go(stm, execute) == STM32_ERR_OK)
-        printf("done.\n");
-    else
-        printf("failed.\n");
 }
 
 void toggleBootFinish(serial *device) {

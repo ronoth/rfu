@@ -26,9 +26,6 @@ extern "C"
 {
 #endif
 
-#define     NRST                       0x0004
-#define     BOOT0                      0x0008
-
 typedef struct serial serial_t;
 
 typedef enum {

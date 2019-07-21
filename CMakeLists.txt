@@ -6,8 +6,11 @@ add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
+
+find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
+
 include_directories(include/ stm32flash/)
-find_package(Qt5Widgets REQUIRED)
 
 add_executable(dfu
         src/serial-gpio-platform.cpp
@@ -24,11 +27,12 @@ add_executable(dfu
         main.cpp
         include/sleepms.h)
 
+
+if (WIN32)
 configure_file(lib/CP210xRuntime.dll
         ${CMAKE_CURRENT_BINARY_DIR}/CP210xRuntime.dll COPYONLY)
-
 target_link_libraries(dfu ${CMAKE_CURRENT_SOURCE_DIR}/lib/CP210xRuntime.lib)
-
+endif (WIN32)
 
 
 add_executable(dfu-gui gui.cpp)

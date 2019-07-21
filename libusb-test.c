@@ -15,16 +15,27 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
+#include <assert.h>
+#include <libusb.h>
 #include <stdio.h>
-#include <serial-gpio.h>
-#include "sleepms.h"
-#include "libusb.h"
 
-struct libusb_context *usb_ctx;
-static libusb_device_handle *cp210x_handle;
+#include "sleepms.h"
 
 #define PID 0xea60
 #define VID 0x10c4
+
+#define REQTYPE_HOST_TO_DEVICE  0x40
+#define REQTYPE_DEVICE_TO_HOST 0xc0
+#define CP210X_WRITE_LATCH 0x37E1
+#define CP210X_READ_LATCH 0x00c2
+#define CP210X_VENDOR_SPECIFIC 0xff
+
+#define     NRST                       0x0004
+#define     BOOT0                      0x0008
+
+
+struct libusb_context *usb_ctx;
+static libusb_device_handle *cp210x_handle;
 
 // Functions borrowed from libv/flashrom
 // Copyright (C) 2018 Linaro Limited
@@ -56,24 +67,16 @@ static void cp210x_gpio_set(uint8_t val, uint8_t mask)
                                   CP210X_VENDOR_SPECIFIC, CP210X_WRITE_LATCH,
                                   gpio, NULL, 0, 0);
     if (res < 0)
-        printf("Failed to set GPIO pins (%s)\n", libusb_error_name(res));
+        printf("Failed to read GPIO pins (%s)\n", libusb_error_name(res));
 }
 
-
-void printDevInfo(serial* device) {
-}
+int main(int argc, char** argv) {
 
 
-void toggleBootFinish(serial *device) {
-    sleep_ms(100);
-}
-
-void toggleBootStart(serial *device) {
-    // Initialize libusb
     int r = libusb_init(&usb_ctx); //initialize the library for the session we just declared
     libusb_set_option(usb_ctx, LIBUSB_OPTION_LOG_LEVEL, 3);
     if(r < 0) {
-        printf("LibUSB: error with init\n");
+        printf("error with init");
         return 1;
     }
     printf("opening 0x%04x:0x%04x\n", VID, PID);
@@ -82,6 +85,10 @@ void toggleBootStart(serial *device) {
         printf("device not found\n");
         return 1;
     }
+    printf("device open\n");
+
+    r = cp210x_gpio_get();
+    printf("gpio 0x%04x\n", r);
 
     cp210x_gpio_set(0xff, 0x00ff);
     sleep_ms(100);
@@ -89,4 +96,9 @@ void toggleBootStart(serial *device) {
     sleep_ms(100);
     cp210x_gpio_set(BOOT0, NRST);
     sleep_ms(100);
+
+    r = cp210x_gpio_get();
+    printf("gpio 0x%04x\n", r);
+
+    libusb_close(cp210x_handle);
 }

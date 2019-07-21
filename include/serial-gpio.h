@@ -36,6 +36,16 @@ struct serial {
 
 #include <termios.h>
 
+#define REQTYPE_HOST_TO_DEVICE  0x40
+#define REQTYPE_DEVICE_TO_HOST 0xc0
+#define CP210X_WRITE_LATCH 0x37E1
+#define CP210X_READ_LATCH 0x00c2
+#define CP210X_VENDOR_SPECIFIC 0xff
+
+#define NRST    0x0004
+#define BOOT0   0x0008
+
+
 struct serial {
     int fd;
     struct termios oldtio;

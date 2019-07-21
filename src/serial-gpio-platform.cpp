@@ -1,12 +1,49 @@
-//
-// Created by steven on 7/14/19.
-//
+/*
+  Copyright (C) 2019 Ronoth, LLC <steven@ronoth.com>
 
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
 #if defined(__WIN32__) || defined(__CYGWIN__)
 #include "serial-gpio-win32.cpp"
 #else
 #include "serial-gpio-posix.cpp"
 #endif
+
+#include <stdio.h>
+#include <string>
+#include "port.h"
+#include "parsers/binary.h"
+
+void eraseFlash(stm32_t *stm) {
+    printf("Erasing Flash\n");
+    stm32_readprot_memory(stm);
+    sleep_ms(100);
+    stm = stm32_init(stm->port, 1);
+    stm32_runprot_memory(stm);
+    sleep_ms(100);
+}
+
+void jumpToStart(stm32_t *stm) {
+    sleep_ms(100);
+    uint32_t execute = stm->dev->fl_start;
+    printf("\nStarting execution at address 0x%08x... ", execute);
+    if (stm32_go(stm, execute) == STM32_ERR_OK)
+        printf("done.\n");
+    else
+        printf("failed.\n");
+}
 
 void printMore(stm32_t *stm, port_interface *port) {
     printf("Interface %s: %s\n", port->name, port->get_cfg_str(port));
@@ -21,7 +58,6 @@ void printMore(stm32_t *stm, port_interface *port) {
     printf("- Flash      : %dKiB (size first sector: %dx%d)\n", (stm->dev->fl_end - stm->dev->fl_start ) / 1024, stm->dev->fl_pps, stm->dev->fl_ps[0]);
     printf("- Option RAM : %db\n", stm->dev->opt_end - stm->dev->opt_start + 1);
     printf("- System RAM : %dKiB\n", (stm->dev->mem_end - stm->dev->mem_start) / 1024);
-
 }
 
 
