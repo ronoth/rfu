@@ -30,8 +30,8 @@
 #define CP210X_READ_LATCH 0x00c2
 #define CP210X_VENDOR_SPECIFIC 0xff
 
-#define     NRST                       0x0004
-#define     BOOT0                      0x0008
+#define     NRST                        0x0004
+#define     BOOT0                       0x0008
 
 
 struct libusb_context *usb_ctx;
@@ -75,16 +75,45 @@ int main(int argc, char** argv) {
 
     int r = libusb_init(&usb_ctx); //initialize the library for the session we just declared
     libusb_set_option(usb_ctx, LIBUSB_OPTION_LOG_LEVEL, 3);
-    if(r < 0) {
-        printf("error with init");
-        return 1;
+
+    // discover devices
+    libusb_device **list;
+    ssize_t cnt = libusb_get_device_list(NULL, &list);
+    ssize_t i = 0;
+    unsigned char serial[256];
+    int err = 0;
+    if (cnt < 0)
+        printf("ERROR HERE\n");
+    printf("iterating %zd devices\n", cnt);
+    for (i = 0; i < cnt; i++) {
+        libusb_device *device = list[i];
+        struct libusb_device_descriptor desc;
+        libusb_get_device_descriptor(device, &desc);
+        printf("pid %d, vid %d\n", desc.idProduct, desc.idVendor);
+        uint8_t serialidx = desc.iSerialNumber;
+        r = libusb_open(device, &cp210x_handle);
+        if (r) {
+            printf("Error failed to open dev\n");
+        }
+        r = libusb_get_string_descriptor_ascii(cp210x_handle, desc.iSerialNumber, serial, sizeof(serial));
+        printf("Serial: %s", serial);
+        if(r == LIBUSB_ERROR_IO) {
+            printf("Error fetching serial descriptor\n");
+            return 1;
+        }
+        if (cp210x_handle)
+            libusb_close(cp210x_handle);
     }
-    printf("opening 0x%04x:0x%04x\n", VID, PID);
-    cp210x_handle  = libusb_open_device_with_vid_pid(usb_ctx, VID, PID);
-    if(cp210x_handle == NULL) {
-        printf("device not found\n");
-        return 1;
-    }
+    libusb_free_device_list(list, 1);
+
+//    printf("opening 0x%04x:0x%04x\n", VID, PID);
+//    cp210x_handle  = libusb_open_device_with_vid_pid(usb_ctx, VID, PID);
+
+
+//    if(cp210x_handle == NULL) {
+//        printf("device not found\n");
+//        return 1;
+//    }
     printf("device open\n");
 
     r = cp210x_gpio_get();

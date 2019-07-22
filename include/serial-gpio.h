@@ -35,6 +35,7 @@ struct serial {
 #else
 
 #include <termios.h>
+#include <string>
 
 #define REQTYPE_HOST_TO_DEVICE  0x40
 #define REQTYPE_DEVICE_TO_HOST 0xc0
