@@ -38,6 +38,12 @@
 #include "parsers/binary.h"
 #include "parsers/hex.h"
 
+#include "libusb-1.0/libusb.h"
+
+struct libusb_context *usb_ctx;
+static libusb_device_handle *cp210x_handle;
+
+
 int main(int argc, char** argv) {
 
 
@@ -55,18 +61,61 @@ int main(int argc, char** argv) {
             std::cout << options.help();
             exit(1);
         }
-        if (opts.count("device") != 1) {
-            std::cout << "Must specify serial device" << std::endl;
-            std::cout << options.help();
-            exit(1);
-        }
-
-        auto device = opts["device"].as<std::string>();
 
         std::string file;
         if(opts.count("file") == 1) {
             file = opts["file"].as<std::string>();
         }
+
+        std::string device;
+
+        if (opts.count("device") != 1) {
+            int r = libusb_init(&usb_ctx); //initialize the library for the session we just declared
+            libusb_set_option(usb_ctx, LIBUSB_OPTION_LOG_LEVEL, 3);
+
+            // discover devices
+            libusb_device **list;
+            ssize_t cnt = libusb_get_device_list(NULL, &list);
+            ssize_t i = 0;
+            unsigned char serial[256];
+            int err = 0;
+            if (cnt < 0)
+                printf("ERROR HERE\n");
+
+            // List all of the available devices.
+            for (i = 0; i < cnt; i++) {
+                libusb_device *device = list[i];
+                struct libusb_device_descriptor desc;
+                libusb_get_device_descriptor(device, &desc);
+                if(desc.idProduct != LOSTIK2_PID && desc.idVendor != LOSTIK2_VID) {
+                    continue;
+                }
+
+                uint8_t serialidx = desc.iSerialNumber;
+                r = libusb_open(device, &cp210x_handle);
+                if (r) {
+                    continue;
+                }
+                r = libusb_get_string_descriptor_ascii(cp210x_handle, desc.iSerialNumber, serial, sizeof(serial));
+                printf("Serial: %s\n", serial);
+                if(r == LIBUSB_ERROR_IO) {
+                    printf("Error fetching serial descriptor\n");
+                    return 1;
+                }
+                if (cp210x_handle)
+                    libusb_close(cp210x_handle);
+            }
+
+            libusb_free_device_list(list, 1);
+
+         //   std::cout << "Must specify serial device" << std::endl;
+//            std::cout << options.help();
+//            exit(1);
+        } else {
+            // Use device path from command line
+            device = opts["device"].as<std::string>();
+        }
+
 
 
         stm32_t *stmout;

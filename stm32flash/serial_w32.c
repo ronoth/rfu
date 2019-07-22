@@ -320,27 +320,7 @@ static port_err_t serial_w32_gpio(struct port_interface *port,
 		if (EscapeCommFunction(h->fd, CLRBREAK) == 0)
 			return PORT_ERR_UNKNOWN;
 		return PORT_ERR_OK;
-
-    case GPIO_BOOT0:
-        if(level == 0)
-//            if(setGPIO(h->fd, BOOT0, 0) != 0)
-//                return PORT_ERR_UNKNOWN;
-//        else
-//            if(setGPIO(h->fd, BOOT0, 1) != 0)
-//                return PORT_ERR_UNKNOWN;
-        return PORT_ERR_OK;
-
-    case GPIO_NRST:
-        if(level == 0)
-//            if(setGPIO(h->fd, NRST, 0) != 0)
-//                return PORT_ERR_UNKNOWN;
-//            else
-//            if(setGPIO(h->fd, NRST, 1) != 0)
-//                return PORT_ERR_UNKNOWN;
-        return PORT_ERR_OK;
-
-
-        default:
+    default:
 		return PORT_ERR_UNKNOWN;
 	}
 

@@ -26,6 +26,12 @@
 #include "port.h"
 #include "parsers/binary.h"
 
+#include "libusb-1.0/libusb.h"
+
+void listDevices() {
+//    libusb_get_device_list()
+}
+
 void eraseFlash(stm32_t *stm) {
     printf("Erasing Flash\n");
     stm32_readprot_memory(stm);

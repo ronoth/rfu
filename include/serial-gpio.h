@@ -19,7 +19,7 @@
 #ifndef DFU_SERIAL_GPIO_H
 #define DFU_SERIAL_GPIO_H
 
-
+#include <string>
 #include <stm32.h>
 
 #ifdef WIN32
@@ -45,6 +45,8 @@ struct serial {
 
 #define NRST    0x0004
 #define BOOT0   0x0008
+#define LOSTIK2_PID 0xea60
+#define LOSTIK2_VID 0x10c4
 
 
 struct serial {
