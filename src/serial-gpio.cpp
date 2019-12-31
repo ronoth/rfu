@@ -15,22 +15,16 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#if defined(__WIN32__) || defined(__CYGWIN__)
-#include "serial-gpio-win32.cpp"
-#else
-#include "serial-gpio-posix.cpp"
-#endif
-
 #include <stdio.h>
 #include <string>
+
+#include "serial-gpio.h"
 #include "port.h"
+#include "stm32.h"
+#include "sleepms.h"
 #include "parsers/binary.h"
+#include "sys/types.h"
 
-#include "libusb-1.0/libusb.h"
-
-void listDevices() {
-//    libusb_get_device_list()
-}
 
 void eraseFlash(stm32_t *stm) {
     printf("Erasing Flash\n");
@@ -43,6 +37,8 @@ void eraseFlash(stm32_t *stm) {
 
 void jumpToStart(stm32_t *stm) {
     sleep_ms(100);
+    stm = stm32_init(stm->port, 1);
+    sleep_ms(100);
     uint32_t execute = stm->dev->fl_start;
     printf("\nStarting execution at address 0x%08x... ", execute);
     if (stm32_go(stm, execute) == STM32_ERR_OK)
@@ -51,7 +47,7 @@ void jumpToStart(stm32_t *stm) {
         printf("failed.\n");
 }
 
-void printMore(stm32_t *stm, port_interface *port) {
+void printDevInfo(stm32_t *stm, port_interface *port) {
     printf("Interface %s: %s\n", port->name, port->get_cfg_str(port));
 
     printf("Version      : 0x%02x\n", stm->bl_version);
@@ -146,4 +142,22 @@ void writeFlash(stm32_t *stm, std::string file) {
 
     close:
     if (p_st) parser->close(p_st);
+}
+
+void toggleBootStart(port_interface *port) {
+    port->gpio(port, GPIO_RTS,1);
+    sleep_ms(100);
+    port->gpio(port, GPIO_DTR, 1);
+    sleep_ms(100);
+    port->gpio(port, GPIO_RTS, 0);
+    sleep_ms(100);
+}
+
+void toggleBootFinish(port_interface *port) {
+    port->gpio(port, GPIO_DTR, 0);
+    sleep_ms(100);
+    port->gpio(port, GPIO_RTS, 1);
+    sleep_ms(100);
+    port->gpio(port, GPIO_RTS, 0);
+    sleep_ms(100);
 }

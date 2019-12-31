@@ -23,47 +23,15 @@
 #include <stm32.h>
 
 #ifdef WIN32
-#include "CP210xRuntimeDLL.h"
 #include "Types.h"
-
-struct serial {
-            HANDLE fd;
-            DCB oldtio;
-            DCB newtio;
-            char setup_str[11];
-        };
-#else
-
-#include <termios.h>
-#include <string>
-
-#define REQTYPE_HOST_TO_DEVICE  0x40
-#define REQTYPE_DEVICE_TO_HOST 0xc0
-#define CP210X_WRITE_LATCH 0x37E1
-#define CP210X_READ_LATCH 0x00c2
-#define CP210X_VENDOR_SPECIFIC 0xff
-
-#define NRST    0x0004
-#define BOOT0   0x0008
-#define LOSTIK2_PID 0xea60
-#define LOSTIK2_VID 0x10c4
-
-
-struct serial {
-    int fd;
-    struct termios oldtio;
-    struct termios newtio;
-    char setup_str[11];
-};
 #endif
 
 void jumpToStart(stm32_t *stm);
 void eraseFlash(stm32_t *stm);
 void writeFlash(stm32_t *stm, std::string file);
-void printMore(stm32_t *stm, port_interface *port);
-void printDevInfo(serial *device);
-void toggleBootStart(serial *device);
-void toggleBootFinish(serial *device);
+void printDevInfo(stm32_t *stm, port_interface *port);
+void toggleBootStart(port_interface *port);
+void toggleBootFinish(port_interface *port);
 
 
 
