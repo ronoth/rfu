@@ -21,6 +21,7 @@
 #include "stdio.h"
 #include "stdbool.h"
 #include "stdint.h"
+#include "stdlib.h"
 #include "sys/types.h"
 
 // stm32flash
@@ -41,15 +42,20 @@ void writeFlash(stm32_t *stm, const char* filename);
 void printDevInfo(stm32_t *stm, struct port_interface *port);
 void toggleBootStart(struct port_interface *port);
 void toggleBootFinish(struct port_interface *port);
-
+void usage();
 
 int main(int argc, char** argv) {
+    printf("RFU - Ronoth Firmware Updater\n");
+
+    if(argc != 3) {
+        usage();
+    }
 
     stm32_t *stmout;
     struct port_options port_opts;
     struct port_interface *port;
 
-    port_opts.device = "";
+    port_opts.device = argv[1];
     port_opts.baudRate = SERIAL_BAUD_57600;
     port_opts.serial_mode = "8e1";
     port_opts.bus_addr = 0;
@@ -74,7 +80,7 @@ int main(int argc, char** argv) {
 
     printDevInfo(stmout, port);
     eraseFlash(stmout);
-    writeFlash(stmout,"");
+    writeFlash(stmout, argv[2]);
     toggleBootFinish(port);
 
     if (stmout) stm32_close(stmout);
@@ -84,6 +90,10 @@ int main(int argc, char** argv) {
     return 0;
 }
 
+void usage() {
+    printf("\nUsage: \n\trfu <port> <filename>\n");
+    exit(2);
+}
 
 void eraseFlash(stm32_t *stm) {
     printf("Erasing Flash\n");
