@@ -17,12 +17,16 @@
 */
 
 // system
-#include "termios.h"
 #include "stdio.h"
 #include "stdbool.h"
 #include "stdint.h"
 #include "stdlib.h"
 #include "sys/types.h"
+
+#if defined(__WIN32__) || defined(__CYGWIN__)
+#else
+#include "termios.h"
+#endif
 
 // stm32flash
 #include "serial.h"
