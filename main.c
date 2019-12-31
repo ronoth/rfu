@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 }
 
 void usage() {
-    printf("\nUsage: \n\trfu <port> <filename>\n");
+    printf("\nUsage: \n\trfu <device> <filename>\n");
     exit(2);
 }
 

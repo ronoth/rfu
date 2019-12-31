@@ -7,7 +7,7 @@ This project is based on
 just provides a thin wrapper to simplify the user interface.
 
 # Usage
-```rfu <port> <filename.bin>```
+```rfu <device> <filename.bin>```
 
 # Installation
 
