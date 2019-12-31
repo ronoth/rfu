@@ -1,17 +1,11 @@
 cmake_minimum_required(VERSION 3.13)
-project(dfu)
-
-set(CMAKE_CXX_STANDARD 11)
-add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+project(rfu)
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
 include_directories(include/ stm32flash/ ${CMAKE_BINARY_DIR}/external/include)
 link_directories(${CMAKE_BINARY_DIR}/external/lib)
 
 add_executable(dfu
-        src/serial-gpio.cpp
         src/stm32flash-lib.c
         stm32flash/stm32.c
         stm32flash/port.c
@@ -22,4 +16,4 @@ add_executable(dfu
         stm32flash/serial_platform.c
         stm32flash/parsers/hex.c
         stm32flash/parsers/binary.c
-        main.cpp)
+        main.c)

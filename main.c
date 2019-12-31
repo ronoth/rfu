@@ -15,15 +15,74 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#include <stdio.h>
-#include <string>
 
-#include "serial-gpio.h"
+// system
+#include "termios.h"
+#include "stdio.h"
+#include "stdbool.h"
+#include "stdint.h"
+#include "sys/types.h"
+
+// stm32flash
+#include "serial.h"
 #include "port.h"
 #include "stm32.h"
-#include "sleepms.h"
+#include "parsers/parser.h"
 #include "parsers/binary.h"
-#include "sys/types.h"
+#include "parsers/hex.h"
+
+// rfu
+#include "sleepms.h"
+#include "stm32flash-lib.h"
+
+void jumpToStart(stm32_t *stm);
+void eraseFlash(stm32_t *stm);
+void writeFlash(stm32_t *stm, const char* filename);
+void printDevInfo(stm32_t *stm, struct port_interface *port);
+void toggleBootStart(struct port_interface *port);
+void toggleBootFinish(struct port_interface *port);
+
+
+int main(int argc, char** argv) {
+
+    stm32_t *stmout;
+    struct port_options port_opts;
+    struct port_interface *port;
+
+    port_opts.device = "";
+    port_opts.baudRate = SERIAL_BAUD_57600;
+    port_opts.serial_mode = "8e1";
+    port_opts.bus_addr = 0;
+    port_opts.rx_frame_max = STM32_MAX_RX_FRAME;
+    port_opts.tx_frame_max = STM32_MAX_TX_FRAME;
+
+    if (port_open(&port_opts, &port) != PORT_ERR_OK) {
+        fprintf(stderr, "Failed to open port: %s\n", port_opts.device);
+        return PORT_INIT_FAILED;
+    }
+
+    struct serial *h = port->_private;
+    toggleBootStart(port);
+
+    char init_flag = 1;
+    stmout = stm32_init(port, init_flag);
+    if (!stmout) {
+        printf("Unable to init STM32\n");
+        return STM_INIT_FAILED;
+    }
+
+
+    printDevInfo(stmout, port);
+    eraseFlash(stmout);
+    writeFlash(stmout,"");
+    toggleBootFinish(port);
+
+    if (stmout) stm32_close(stmout);
+    if (port)
+        port->close(port);
+
+    return 0;
+}
 
 
 void eraseFlash(stm32_t *stm) {
@@ -35,19 +94,7 @@ void eraseFlash(stm32_t *stm) {
     sleep_ms(100);
 }
 
-void jumpToStart(stm32_t *stm) {
-    sleep_ms(100);
-    stm = stm32_init(stm->port, 1);
-    sleep_ms(100);
-    uint32_t execute = stm->dev->fl_start;
-    printf("\nStarting execution at address 0x%08x... ", execute);
-    if (stm32_go(stm, execute) == STM32_ERR_OK)
-        printf("done.\n");
-    else
-        printf("failed.\n");
-}
-
-void printDevInfo(stm32_t *stm, port_interface *port) {
+void printDevInfo(stm32_t *stm, struct port_interface *port) {
     printf("Interface %s: %s\n", port->name, port->get_cfg_str(port));
 
     printf("Version      : 0x%02x\n", stm->bl_version);
@@ -63,7 +110,7 @@ void printDevInfo(stm32_t *stm, port_interface *port) {
 }
 
 
-void writeFlash(stm32_t *stm, std::string file) {
+void writeFlash(stm32_t *stm, const char* filename) {
 
     stm = stm32_init(stm->port, 1);
     off_t offset = 0;
@@ -80,7 +127,6 @@ void writeFlash(stm32_t *stm, std::string file) {
     parser = &PARSER_BINARY;
 
     stm32_err_t s_err;
-    const char* filename = file.c_str();
 
     max_wlen = STM32_MAX_TX_FRAME - 2;	/* skip len and crc */
     max_wlen &= ~3;	/* 32 bit aligned */
@@ -144,7 +190,7 @@ void writeFlash(stm32_t *stm, std::string file) {
     if (p_st) parser->close(p_st);
 }
 
-void toggleBootStart(port_interface *port) {
+void toggleBootStart(struct port_interface *port) {
     port->gpio(port, GPIO_RTS,1);
     sleep_ms(100);
     port->gpio(port, GPIO_DTR, 1);
@@ -153,7 +199,7 @@ void toggleBootStart(port_interface *port) {
     sleep_ms(100);
 }
 
-void toggleBootFinish(port_interface *port) {
+void toggleBootFinish(struct port_interface *port) {
     port->gpio(port, GPIO_DTR, 0);
     sleep_ms(100);
     port->gpio(port, GPIO_RTS, 1);
