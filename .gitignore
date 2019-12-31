@@ -9,4 +9,4 @@ compile_commands.json
 CTestTestfile.cmake
 .idea/
 cmake-build-*
-dfu*.dir
+rfu*.dir

@@ -2,8 +2,8 @@
 // Created by steven on 7/4/2019.
 //
 
-#ifndef DFU_STM32FLASH_LIB_H
-#define DFU_STM32FLASH_LIB_H
+#ifndef RFU_STM32FLASH_LIB_H
+#define RFU_STM32FLASH_LIB_H
 
 #ifdef __cplusplus
 extern "C"
@@ -55,4 +55,4 @@ int flash_addr_to_page_ceil(stm32_t *stm, uint32_t addr);
 }
 #endif
 
-#endif //DFU_STM32FLASH_LIB_H
+#endif //RFU_STM32FLASH_LIB_H

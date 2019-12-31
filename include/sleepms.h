@@ -2,8 +2,8 @@
 // Created by steven on 7/14/19.
 //
 
-#ifndef DFU_SLEEPMS_H
-#define DFU_SLEEPMS_H
+#ifndef RFU_SLEEPMS_H
+#define RFU_SLEEPMS_H
 
 #if defined(__WIN32__) || defined(__CYGWIN__)
 #include <windows.h>
@@ -27,4 +27,4 @@ void sleep_ms(int milliseconds) // cross-platform sleep function
 #endif
 }
 
-#endif //DFU_SLEEPMS_H
+#endif //RFU_SLEEPMS_H

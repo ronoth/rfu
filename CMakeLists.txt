@@ -5,7 +5,7 @@ LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
 include_directories(include/ stm32flash/ ${CMAKE_BINARY_DIR}/external/include)
 link_directories(${CMAKE_BINARY_DIR}/external/lib)
 
-add_executable(dfu
+add_executable(rfu
         src/stm32flash-lib.c
         stm32flash/stm32.c
         stm32flash/port.c
